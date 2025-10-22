@@ -1,5 +1,6 @@
 package adminorder.service;
 
+import adminorder.entity.FaultInjectionResponse;
 import edu.fudan.common.entity.*;
 import edu.fudan.common.util.Response;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @author fdse
@@ -86,6 +88,31 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     @Override
     public Response deleteOrder(String orderId, String trainNumber, HttpHeaders headers) {
         Response deleteOrderResult;
+        
+        // INJECTED FAULT: Validate orderId length (must be between 10 and 50 characters)
+        if (orderId == null || orderId.trim().isEmpty()) {
+            AdminOrderServiceImpl.LOGGER.warn("[deleteOrder][INJECTED FAULT][INVALID_ORDER_ID_LENGTH_FAULT] orderId is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_ORDER_ID_LENGTH_FAULT", 
+                "Order deletion rejected: orderId cannot be null or empty"
+            );
+            return new Response<>(0, "Order deletion rejected: orderId cannot be null or empty", faultResponse);
+        }
+        
+        // INJECTED FAULT: orderId length validation
+        if (orderId.trim().length() < 10 || orderId.trim().length() > 50) {
+            AdminOrderServiceImpl.LOGGER.warn("[deleteOrder][INJECTED FAULT][INVALID_ORDER_ID_LENGTH_FAULT] orderId length invalid: {}, length: {}", 
+                orderId, orderId.trim().length());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_ORDER_ID_LENGTH_FAULT", 
+                "Order deletion rejected: orderId length must be between 10 and 50 characters",
+                String.format("OrderID: '%s', Length: %d", orderId, orderId.trim().length())
+            );
+            return new Response<>(0, "Order deletion rejected: orderId length must be between 10 and 50 characters", faultResponse);
+        }
+        
         if (trainNumber.startsWith("G") || trainNumber.startsWith("D")) {
             AdminOrderServiceImpl.LOGGER.info("[deleteOrder][Delete Order][orderId: {}, trainNumber: {}]", orderId, trainNumber);
             HttpEntity requestEntity = new HttpEntity(null);
@@ -118,6 +145,31 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
         Response updateOrderResult;
         LOGGER.info("[updateOrder][UPDATE ORDER INFO][request info: {}]", request.toString());
+        
+        // INJECTED FAULT: Validate seatNumber format (must be like "5A", "10B", etc.)
+        if (request.getSeatNumber() == null || request.getSeatNumber().trim().isEmpty()) {
+            LOGGER.warn("[updateOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_SEAT_NUMBER_FAULT", 
+                "Order update rejected: seatNumber cannot be null or empty"
+            );
+            return new Response<>(0, "Order update rejected: seatNumber cannot be null or empty", faultResponse);
+        }
+        
+        // INJECTED FAULT: seatNumber must follow pattern like "1A", "10B" (digits followed by a letter)
+        Pattern seatPattern = Pattern.compile("^\\d+[A-Z]$");
+        if (!seatPattern.matcher(request.getSeatNumber().trim()).matches()) {
+            LOGGER.warn("[updateOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber format invalid: {}", request.getSeatNumber());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_SEAT_NUMBER_FAULT", 
+                "Order update rejected: seatNumber must follow format like '5A' or '10B' (digits followed by uppercase letter)",
+                request.getSeatNumber()
+            );
+            return new Response<>(0, "Order update rejected: seatNumber must follow format like '5A' or '10B' (digits followed by uppercase letter)", faultResponse);
+        }
+        
         if (request.getTrainNumber().startsWith("G") || request.getTrainNumber().startsWith("D")) {
 
             AdminOrderServiceImpl.LOGGER.info("[updateOrder][Update Order][trainNumber starts With G or D]");
@@ -150,6 +202,30 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
         Response addOrderResult;
         LOGGER.info("[addOrder][ADD ORDER][request info: {}]", request.toString());
+        
+        // INJECTED FAULT: Validate contactsName format
+        if (request.getContactsName() == null || request.getContactsName().trim().isEmpty()) {
+            LOGGER.warn("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_CONTACTS_NAME_FAULT", 
+                "Order rejected: contactsName cannot be null or empty"
+            );
+            return new Response<>(0, "Order rejected: contactsName cannot be null or empty", faultResponse);
+        }
+        
+        // INJECTED FAULT: contactsName cannot be purely numeric
+        if (request.getContactsName().matches("^\\d+$")) {
+            LOGGER.warn("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is purely numeric: {}", request.getContactsName());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_CONTACTS_NAME_FAULT", 
+                "Order rejected: contactsName cannot be purely numeric",
+                request.getContactsName()
+            );
+            return new Response<>(0, "Order rejected: contactsName cannot be purely numeric", faultResponse);
+        }
+        
         if (request.getTrainNumber().startsWith("G") || request.getTrainNumber().startsWith("D")) {
             AdminOrderServiceImpl.LOGGER.info("[addOrder][Add New Order][trainNumber starts With G or D]");
             HttpEntity requestEntity = new HttpEntity(request, headers);
