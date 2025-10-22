@@ -91,7 +91,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         
         // INJECTED FAULT: Validate orderId length (must be between 10 and 50 characters)
         if (orderId == null || orderId.trim().isEmpty()) {
-            AdminOrderServiceImpl.LOGGER.warn("[deleteOrder][INJECTED FAULT][INVALID_ORDER_ID_LENGTH_FAULT] orderId is null or empty");
+            AdminOrderServiceImpl.LOGGER.error("[deleteOrder][INJECTED FAULT][INVALID_ORDER_ID_LENGTH_FAULT] orderId is null or empty");
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
                 "INVALID_ORDER_ID_LENGTH_FAULT", 
@@ -102,7 +102,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         
         // INJECTED FAULT: orderId length validation
         if (orderId.trim().length() < 10 || orderId.trim().length() > 50) {
-            AdminOrderServiceImpl.LOGGER.warn("[deleteOrder][INJECTED FAULT][INVALID_ORDER_ID_LENGTH_FAULT] orderId length invalid: {}, length: {}", 
+            AdminOrderServiceImpl.LOGGER.error("[deleteOrder][INJECTED FAULT][INVALID_ORDER_ID_LENGTH_FAULT] orderId length invalid: {}, length: {}", 
                 orderId, orderId.trim().length());
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
@@ -148,7 +148,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         
         // INJECTED FAULT: Validate seatNumber format (must be like "5A", "10B", etc.)
         if (request.getSeatNumber() == null || request.getSeatNumber().trim().isEmpty()) {
-            LOGGER.warn("[updateOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber is null or empty");
+            LOGGER.error("[updateOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber is null or empty");
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
                 "INVALID_SEAT_NUMBER_FAULT", 
@@ -160,7 +160,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         // INJECTED FAULT: seatNumber must follow pattern like "1A", "10B" (digits followed by a letter)
         Pattern seatPattern = Pattern.compile("^\\d+[A-Z]$");
         if (!seatPattern.matcher(request.getSeatNumber().trim()).matches()) {
-            LOGGER.warn("[updateOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber format invalid: {}", request.getSeatNumber());
+            LOGGER.error("[updateOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber format invalid: {}", request.getSeatNumber());
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
                 "INVALID_SEAT_NUMBER_FAULT", 
@@ -205,7 +205,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         
         // INJECTED FAULT: Validate contactsName format
         if (request.getContactsName() == null || request.getContactsName().trim().isEmpty()) {
-            LOGGER.warn("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is null or empty");
+            LOGGER.error("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is null or empty");
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
                 "INVALID_CONTACTS_NAME_FAULT", 
@@ -216,7 +216,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         
         // INJECTED FAULT: contactsName cannot be purely numeric
         if (request.getContactsName().matches("^\\d+$")) {
-            LOGGER.warn("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is purely numeric: {}", request.getContactsName());
+            LOGGER.error("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is purely numeric: {}", request.getContactsName());
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
                 "INVALID_CONTACTS_NAME_FAULT", 
