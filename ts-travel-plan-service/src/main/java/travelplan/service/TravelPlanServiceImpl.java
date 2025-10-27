@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import edu.fudan.common.entity.*;
+import travelplan.entity.FaultInjectionResponse;
 import travelplan.entity.TransferTravelInfo;
 import travelplan.entity.TransferTravelResult;
 import travelplan.entity.TravelAdvanceResultUnit;
@@ -181,6 +182,42 @@ public class TravelPlanServiceImpl implements TravelPlanService {
 
     @Override
     public Response getMinStation(TripInfo info, HttpHeaders headers) {
+        TravelPlanServiceImpl.LOGGER.info("[getMinStation][Get Min Station Travel Plan][Start: {}, End: {}, Date: {}]", 
+            info.getStartPlace(), info.getEndPlace(), info.getDepartureTime());
+        
+        // INJECTED FAULT: Validate station names (cannot be null or empty)
+        if (info.getStartPlace() == null || info.getStartPlace().trim().isEmpty()) {
+            TravelPlanServiceImpl.LOGGER.warn("[getMinStation][INJECTED FAULT][INVALID_STATION_NAME_FAULT] startPlace is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_STATION_NAME_FAULT", 
+                "Travel plan request rejected: startPlace cannot be null or empty"
+            );
+            return new Response<>(0, "Travel plan request rejected: startPlace cannot be null or empty", faultResponse);
+        }
+        
+        if (info.getEndPlace() == null || info.getEndPlace().trim().isEmpty()) {
+            TravelPlanServiceImpl.LOGGER.warn("[getMinStation][INJECTED FAULT][INVALID_STATION_NAME_FAULT] endPlace is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_STATION_NAME_FAULT", 
+                "Travel plan request rejected: endPlace cannot be null or empty"
+            );
+            return new Response<>(0, "Travel plan request rejected: endPlace cannot be null or empty", faultResponse);
+        }
+        
+        // INJECTED FAULT: Validate start and end stations are different
+        if (info.getStartPlace().trim().equalsIgnoreCase(info.getEndPlace().trim())) {
+            TravelPlanServiceImpl.LOGGER.warn("[getMinStation][INJECTED FAULT][SAME_STATION_FAULT] startPlace equals endPlace: {}", info.getStartPlace());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "SAME_STATION_FAULT", 
+                "Travel plan request rejected: startPlace and endPlace cannot be the same",
+                String.format("Station: %s", info.getStartPlace())
+            );
+            return new Response<>(0, "Travel plan request rejected: startPlace and endPlace cannot be the same", faultResponse);
+        }
+        
         RoutePlanInfo routePlanInfo = new RoutePlanInfo();
         routePlanInfo.setNum(5);
         routePlanInfo.setStartStation(info.getStartPlace());

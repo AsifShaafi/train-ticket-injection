@@ -287,6 +287,42 @@ public class AdminBasicInfoServiceImpl implements AdminBasicInfoService {
 
     @Override
     public Response addPrice(PriceInfo pi, HttpHeaders headers) {
+        LOGGER.info("[addPrice][Add Price][PriceInfo: {}]", pi);
+        
+        // INJECTED FAULT: Validate price rate values (must be positive)
+        if (pi.getBasicPriceRate() <= 0) {
+            LOGGER.warn("[addPrice][INJECTED FAULT][INVALID_PRICE_RATE_FAULT] basicPriceRate is non-positive: {}", pi.getBasicPriceRate());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_PRICE_RATE_FAULT", 
+                "Price creation rejected: basicPriceRate must be positive",
+                String.format("basicPriceRate: %.2f", pi.getBasicPriceRate())
+            );
+            return new Response<>(0, "Price creation rejected: basicPriceRate must be positive", faultResponse);
+        }
+        
+        if (pi.getFirstClassPriceRate() <= 0) {
+            LOGGER.warn("[addPrice][INJECTED FAULT][INVALID_PRICE_RATE_FAULT] firstClassPriceRate is non-positive: {}", pi.getFirstClassPriceRate());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_PRICE_RATE_FAULT", 
+                "Price creation rejected: firstClassPriceRate must be positive",
+                String.format("firstClassPriceRate: %.2f", pi.getFirstClassPriceRate())
+            );
+            return new Response<>(0, "Price creation rejected: firstClassPriceRate must be positive", faultResponse);
+        }
+        
+        // INJECTED FAULT: Validate routeId format
+        if (pi.getRouteId() == null || pi.getRouteId().trim().isEmpty()) {
+            LOGGER.warn("[addPrice][INJECTED FAULT][INVALID_ROUTE_ID_FAULT] routeId is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_ROUTE_ID_FAULT", 
+                "Price creation rejected: routeId cannot be null or empty"
+            );
+            return new Response<>(0, "Price creation rejected: routeId cannot be null or empty", faultResponse);
+        }
+        
         HttpEntity requestEntity = new HttpEntity(pi, headers);
         String price_service_url = getServiceUrl("ts-price-service");
         String prices = price_service_url + "/api/v1/priceservice/prices";

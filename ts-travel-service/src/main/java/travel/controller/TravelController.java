@@ -14,10 +14,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import edu.fudan.common.entity.TravelInfo;
+import edu.fudan.common.util.Response;
 import travel.entity.*;
 import travel.service.TravelService;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import static org.springframework.http.ResponseEntity.ok;
 
@@ -119,7 +122,56 @@ public class TravelController {
             ArrayList<TripResponse> errorList = new ArrayList<>();
             return ok(errorList);
         }
-        TravelController.LOGGER.info("[query][Query TripResponse]");
+        
+        TravelController.LOGGER.info("[query][Query TripResponse][Start: {}, End: {}, Date: {}]", 
+            info.getStartPlace(), info.getEndPlace(), info.getDepartureTime());
+        
+        // INJECTED FAULT: Validate start and end stations are different
+        if (info.getStartPlace().trim().equalsIgnoreCase(info.getEndPlace().trim())) {
+            TravelController.LOGGER.warn("[query][INJECTED FAULT][SAME_STATION_FAULT] startPlace equals endPlace: {}", info.getStartPlace());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "SAME_STATION_FAULT", 
+                "Trip query rejected: startPlace and endPlace cannot be the same",
+                String.format("Station: %s", info.getStartPlace())
+            );
+            return ok(new Response<>(0, "Trip query rejected: startPlace and endPlace cannot be the same", faultResponse));
+        }
+        
+        // INJECTED FAULT: Validate date format (basic check for valid date string)
+        if (info.getDepartureTime() != null && !info.getDepartureTime().trim().isEmpty()) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                sdf.setLenient(false);
+                Date departureDate = sdf.parse(info.getDepartureTime());
+                
+                // Check if date is in the past (before today)
+                Date today = new Date();
+                SimpleDateFormat sdfCompare = new SimpleDateFormat("yyyy-MM-dd");
+                Date todayDate = sdfCompare.parse(sdfCompare.format(today));
+                
+                if (departureDate.before(todayDate)) {
+                    TravelController.LOGGER.warn("[query][INJECTED FAULT][PAST_DATE_FAULT] departureTime is in the past: {}", info.getDepartureTime());
+                    FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                        true, 
+                        "PAST_DATE_FAULT", 
+                        "Trip query rejected: departureTime cannot be in the past",
+                        info.getDepartureTime()
+                    );
+                    return ok(new Response<>(0, "Trip query rejected: departureTime cannot be in the past", faultResponse));
+                }
+            } catch (Exception e) {
+                TravelController.LOGGER.warn("[query][INJECTED FAULT][INVALID_DATE_FORMAT_FAULT] Invalid date format: {}", info.getDepartureTime());
+                FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                    true, 
+                    "INVALID_DATE_FORMAT_FAULT", 
+                    "Trip query rejected: departureTime must be in format yyyy-MM-dd",
+                    info.getDepartureTime()
+                );
+                return ok(new Response<>(0, "Trip query rejected: departureTime must be in format yyyy-MM-dd", faultResponse));
+            }
+        }
+        
         return ok(travelService.queryByBatch(info, headers));
     }
 

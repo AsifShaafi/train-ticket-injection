@@ -1,5 +1,6 @@
 package adminroute.service;
 
+import adminroute.entity.FaultInjectionResponse;
 import edu.fudan.common.entity.Route;
 import edu.fudan.common.entity.RouteInfo;
 import edu.fudan.common.util.Response;
@@ -51,10 +52,47 @@ public class AdminRouteServiceImpl implements AdminRouteService {
 
     @Override
     public Response createAndModifyRoute(RouteInfo request, HttpHeaders headers) {
+        logger.info("[createAndModifyRoute][Create and modify route][route id: {}]", request.getId());
+        
+        // INJECTED FAULT: Validate station list (must have at least 2 stations)
+        List<String> stations = request.getStations();
+        if (stations == null || stations.isEmpty()) {
+            logger.warn("[createAndModifyRoute][INJECTED FAULT][INSUFFICIENT_STATIONS_FAULT] station list is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INSUFFICIENT_STATIONS_FAULT", 
+                "Route creation rejected: station list cannot be null or empty"
+            );
+            return new Response<>(0, "Route creation rejected: station list cannot be null or empty", faultResponse);
+        }
+        
+        if (stations.size() < 2) {
+            logger.warn("[createAndModifyRoute][INJECTED FAULT][INSUFFICIENT_STATIONS_FAULT] station list has less than 2 stations: {}", stations.size());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INSUFFICIENT_STATIONS_FAULT", 
+                "Route creation rejected: route must have at least 2 stations",
+                String.format("Number of stations: %d", stations.size())
+            );
+            return new Response<>(0, "Route creation rejected: route must have at least 2 stations", faultResponse);
+        }
+        
+        // INJECTED FAULT: Validate no duplicate stations in the route
+        long uniqueStations = stations.stream().map(String::toLowerCase).distinct().count();
+        if (uniqueStations < stations.size()) {
+            logger.warn("[createAndModifyRoute][INJECTED FAULT][DUPLICATE_STATIONS_FAULT] station list contains duplicates");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "DUPLICATE_STATIONS_FAULT", 
+                "Route creation rejected: station list cannot contain duplicate stations",
+                String.format("Total stations: %d, Unique stations: %d", stations.size(), uniqueStations)
+            );
+            return new Response<>(0, "Route creation rejected: station list cannot contain duplicate stations", faultResponse);
+        }
+        
         // check stations
         String start = request.getStartStation();
         String end = request.getEndStation();
-        List<String> stations = request.getStations();
         if(!stations.contains(start) || !stations.contains(end)){
             logger.error("[createAndModifyRoute][check stations][start or end not included in stationList][start: {}, end: {}]", start, end);
             return new Response(0, "start or end station not include in stationList.", null);

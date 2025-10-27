@@ -1,5 +1,6 @@
 package admintravel.service;
 
+import admintravel.entity.FaultInjectionResponse;
 import edu.fudan.common.entity.AdminTrip;
 import edu.fudan.common.entity.Route;
 import edu.fudan.common.entity.TrainType;
@@ -157,6 +158,30 @@ public class AdminTravelServiceImpl implements AdminTravelService {
 
     @Override
     public Response deleteTravel(String tripId, HttpHeaders headers) {
+        AdminTravelServiceImpl.LOGGER.info("[deleteTravel][Admin delete travel][trip id: {}]", tripId);
+        
+        // INJECTED FAULT: Validate tripId format (cannot be null or empty)
+        if (tripId == null || tripId.trim().isEmpty()) {
+            AdminTravelServiceImpl.LOGGER.warn("[deleteTravel][INJECTED FAULT][INVALID_TRIP_ID_FORMAT_FAULT] tripId is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_TRIP_ID_FORMAT_FAULT", 
+                "Trip deletion rejected: tripId cannot be null or empty"
+            );
+            return new Response<>(0, "Trip deletion rejected: tripId cannot be null or empty", faultResponse);
+        }
+        
+        // INJECTED FAULT: Validate tripId length (must be between 4 and 20 characters)
+        if (tripId.trim().length() < 4 || tripId.trim().length() > 20) {
+            AdminTravelServiceImpl.LOGGER.warn("[deleteTravel][INJECTED FAULT][INVALID_TRIP_ID_LENGTH_FAULT] tripId length invalid: {}", tripId.trim().length());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_TRIP_ID_LENGTH_FAULT", 
+                "Trip deletion rejected: tripId length must be between 4 and 20 characters",
+                String.format("TripID: '%s', Length: %d", tripId, tripId.trim().length())
+            );
+            return new Response<>(0, "Trip deletion rejected: tripId length must be between 4 and 20 characters", faultResponse);
+        }
 
         Response result;
         String requestUtl = "";
