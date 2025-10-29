@@ -51,9 +51,9 @@ function deploy_monitoring {
 }
 
 function deploy_tracing {
-  echo "Start deploy skywalking"
+  echo "Start deploy OpenTelemetry"
   namespace=$1
-  kubectl apply -f deployment/kubernetes-manifests/skywalking -n $namespace
+  kubectl apply -f deployment/kubernetes-manifests/otel -n $namespace
 }
 
 function deploy_tt_mysql_all_in_one {

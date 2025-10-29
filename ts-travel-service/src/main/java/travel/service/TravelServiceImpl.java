@@ -6,7 +6,6 @@ import edu.fudan.common.entity.*;
 import edu.fudan.common.util.JsonUtils;
 import edu.fudan.common.util.Response;
 import edu.fudan.common.util.StringUtils;
-import org.apache.skywalking.apm.toolkit.trace.TraceCrossThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -216,7 +215,6 @@ public class TravelServiceImpl implements TravelService {
         return new Response<>(1, success, list);
     }
 
-    @TraceCrossThread
     class MyCallable implements Callable<TripResponse> {
         private TripInfo info;
         private Trip tempTrip;
