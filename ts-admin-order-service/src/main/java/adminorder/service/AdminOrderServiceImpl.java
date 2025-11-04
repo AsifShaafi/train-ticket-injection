@@ -215,13 +215,13 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         }
         
         // INJECTED FAULT: contactsName cannot be purely numeric
-        if (request.getContactsName().matches("^\\d+$")) {
-            LOGGER.error("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is purely numeric: {}", request.getContactsName());
+        if (request.getContactsName().trim().matches("^\\d+$")) {
+            LOGGER.error("[addOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is purely numeric: {}", request.getContactsName().trim());
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
                 "INVALID_CONTACTS_NAME_FAULT", 
                 "Order rejected: contactsName cannot be purely numeric",
-                request.getContactsName()
+                request.getContactsName().trim()
             );
             return new Response<>(0, "Order rejected: contactsName cannot be purely numeric", faultResponse);
         }

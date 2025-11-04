@@ -13,8 +13,8 @@ This document records all injected faults across microservices for black-box tes
 **Description:** Rejects order creation when `contactsName` is null, empty, or purely numeric.
 
 **Trigger Conditions:**
-- `contactsName` is null or empty string
-- `contactsName` contains only digits (e.g., "12345")
+- `contactsName` is null, empty, or contains only whitespace
+- `contactsName` contains only digits after trimming whitespace (e.g., "12345", " 999 ")
 
 **Sample Input:**
 ```json
@@ -51,8 +51,8 @@ This document records all injected faults across microservices for black-box tes
 **Description:** Rejects order updates when `seatNumber` doesn't follow the required format (digits followed by uppercase letter).
 
 **Trigger Conditions:**
-- `seatNumber` is null or empty
-- `seatNumber` doesn't match pattern `^\d+[A-Z]$` (e.g., "5a", "A5", "5", "AB")
+- `seatNumber` is null, empty, or contains only whitespace
+- `seatNumber` doesn't match pattern `^\d+[A-Z]$` after trimming (e.g., "5a", "A5", "5", "AB", " ")
 
 **Sample Input:**
 ```json
@@ -90,9 +90,9 @@ This document records all injected faults across microservices for black-box tes
 **Description:** Rejects order deletion when `orderId` length is outside the valid range (10-50 characters).
 
 **Trigger Conditions:**
-- `orderId` is null or empty
-- `orderId` length < 10 characters
-- `orderId` length > 50 characters
+- `orderId` is null, empty, or contains only whitespace
+- `orderId` length < 10 characters after trimming
+- `orderId` length > 50 characters after trimming
 
 **Sample Input:**
 ```
@@ -162,7 +162,7 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 **Description:** Rejects price creation when routeId is null or empty.
 
 **Trigger Conditions:**
-- `routeId` is null or empty string
+- `routeId` is null, empty, or contains only whitespace
 
 **Sample Input:**
 ```json
@@ -198,8 +198,8 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 **Description:** Rejects travel plan request when station names are null or empty.
 
 **Trigger Conditions:**
-- `startPlace` is null or empty
-- `endPlace` is null or empty
+- `startPlace` is null, empty, or contains only whitespace
+- `endPlace` is null, empty, or contains only whitespace
 
 **Sample Input:**
 ```json
@@ -372,8 +372,8 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 **Description:** Rejects login when username format is invalid.
 
 **Trigger Conditions:**
-- `username` is null or empty
-- `username` length < 4 or > 20 characters
+- `username` is null, empty, or contains only whitespace
+- `username` length < 4 or > 20 characters after trimming
 
 **Sample Input:**
 ```json
@@ -406,7 +406,7 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 **Description:** Rejects login when password is too short.
 
 **Trigger Conditions:**
-- `password` is null or length < 6 characters
+- `password` is null or length < 6 characters (whitespace is NOT trimmed for passwords)
 
 **Sample Input:**
 ```json
@@ -441,7 +441,7 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 **Description:** Rejects trip deletion when tripId format is invalid.
 
 **Trigger Conditions:**
-- `tripId` is null or empty
+- `tripId` is null, empty, or contains only whitespace
 
 **Sample Input:**
 ```
@@ -470,7 +470,7 @@ DELETE /api/v1/admintravelservice/admintravel/
 **Description:** Rejects trip deletion when tripId length is invalid.
 
 **Trigger Conditions:**
-- `tripId` length < 4 or > 20 characters
+- `tripId` length < 4 or > 20 characters after trimming
 
 **Sample Input:**
 ```
@@ -503,7 +503,7 @@ DELETE /api/v1/admintravelservice/admintravel/G12
 
 **Trigger Conditions:**
 - `stationList` is null or empty
-- Number of stations < 2
+- Number of stations < 2 (individual station names are not trimmed, but empty entries are still invalid)
 
 **Sample Input:**
 ```json

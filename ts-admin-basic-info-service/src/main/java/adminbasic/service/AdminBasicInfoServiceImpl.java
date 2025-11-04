@@ -312,7 +312,7 @@ public class AdminBasicInfoServiceImpl implements AdminBasicInfoService {
             return new Response<>(0, "Price creation rejected: firstClassPriceRate must be positive", faultResponse);
         }
         
-        // INJECTED FAULT: Validate routeId format
+        // INJECTED FAULT: Validate routeId format (after checking price rates)
         if (pi.getRouteId() == null || pi.getRouteId().trim().isEmpty()) {
             LOGGER.warn("[addPrice][INJECTED FAULT][INVALID_ROUTE_ID_FAULT] routeId is null or empty");
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
