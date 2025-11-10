@@ -8,9 +8,9 @@ This document records all injected faults across microservices for black-box tes
 
 ### 1. INVALID_CONTACTS_NAME_FAULT
 
-**API:** `POST /api/v1/adminorderservice/adminorder`
+**API:** `POST /api/v1/adminorderservice/adminorder` AND `PUT /api/v1/adminorderservice/adminorder`
 
-**Description:** Rejects order creation when `contactsName` is null, empty, or purely numeric.
+**Description:** Rejects order creation/updates when `contactsName` is null, empty, or purely numeric.
 
 **Trigger Conditions:**
 - `contactsName` is null, empty, or contains only whitespace
@@ -46,9 +46,9 @@ This document records all injected faults across microservices for black-box tes
 
 ### 2. INVALID_SEAT_NUMBER_FAULT
 
-**API:** `PUT /api/v1/adminorderservice/adminorder`
+**API:** `POST /api/v1/adminorderservice/adminorder` AND `PUT /api/v1/adminorderservice/adminorder`
 
-**Description:** Rejects order updates when `seatNumber` doesn't follow the required format (digits followed by uppercase letter).
+**Description:** Rejects order creation/updates when `seatNumber` doesn't follow the required format (digits followed by uppercase letter).
 
 **Trigger Conditions:**
 - `seatNumber` is null, empty, or contains only whitespace
@@ -589,8 +589,8 @@ These characteristics distinguish injected faults from genuine system errors, en
 **Total Fault Types:** 16
 
 **Injected APIs:**
-1. POST /api/v1/adminorderservice/adminorder
-2. PUT /api/v1/adminorderservice/adminorder
+1. POST /api/v1/adminorderservice/adminorder (validates contactsName and seatNumber)
+2. PUT /api/v1/adminorderservice/adminorder (validates contactsName and seatNumber)
 3. DELETE /api/v1/adminorderservice/adminorder/{orderId}/{trainNumber}
 4. POST /api/v1/adminbasicservice/adminbasic/prices
 5. POST /api/v1/travelplanservice/travelPlan/minStation

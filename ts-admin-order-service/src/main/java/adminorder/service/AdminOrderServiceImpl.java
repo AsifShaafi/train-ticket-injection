@@ -146,6 +146,29 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         Response updateOrderResult;
         LOGGER.info("[updateOrder][UPDATE ORDER INFO][request info: {}]", request.toString());
         
+        // INJECTED FAULT: Validate contactsName format
+        if (request.getContactsName() == null || request.getContactsName().trim().isEmpty()) {
+            LOGGER.error("[updateOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_CONTACTS_NAME_FAULT", 
+                "Order update rejected: contactsName cannot be null or empty"
+            );
+            return new Response<>(0, "Order update rejected: contactsName cannot be null or empty", faultResponse);
+        }
+        
+        // INJECTED FAULT: contactsName cannot be purely numeric
+        if (request.getContactsName().trim().matches("^\\d+$")) {
+            LOGGER.error("[updateOrder][INJECTED FAULT][INVALID_CONTACTS_NAME_FAULT] contactsName is purely numeric: {}", request.getContactsName().trim());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_CONTACTS_NAME_FAULT", 
+                "Order update rejected: contactsName cannot be purely numeric",
+                request.getContactsName().trim()
+            );
+            return new Response<>(0, "Order update rejected: contactsName cannot be purely numeric", faultResponse);
+        }
+        
         // INJECTED FAULT: Validate seatNumber format (must be like "5A", "10B", etc.)
         if (request.getSeatNumber() == null || request.getSeatNumber().trim().isEmpty()) {
             LOGGER.error("[updateOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber is null or empty");
@@ -224,6 +247,30 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 request.getContactsName().trim()
             );
             return new Response<>(0, "Order rejected: contactsName cannot be purely numeric", faultResponse);
+        }
+        
+        // INJECTED FAULT: Validate seatNumber format (must be like "5A", "10B", etc.)
+        if (request.getSeatNumber() == null || request.getSeatNumber().trim().isEmpty()) {
+            LOGGER.error("[addOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_SEAT_NUMBER_FAULT", 
+                "Order creation rejected: seatNumber cannot be null or empty"
+            );
+            return new Response<>(0, "Order creation rejected: seatNumber cannot be null or empty", faultResponse);
+        }
+        
+        // INJECTED FAULT: seatNumber must follow pattern like "1A", "10B" (digits followed by a letter)
+        Pattern seatPattern = Pattern.compile("^\\d+[A-Z]$");
+        if (!seatPattern.matcher(request.getSeatNumber().trim()).matches()) {
+            LOGGER.error("[addOrder][INJECTED FAULT][INVALID_SEAT_NUMBER_FAULT] seatNumber format invalid: {}", request.getSeatNumber());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_SEAT_NUMBER_FAULT", 
+                "Order creation rejected: seatNumber must follow format like '5A' or '10B' (digits followed by uppercase letter)",
+                request.getSeatNumber()
+            );
+            return new Response<>(0, "Order creation rejected: seatNumber must follow format like '5A' or '10B' (digits followed by uppercase letter)", faultResponse);
         }
         
         if (request.getTrainNumber().startsWith("G") || request.getTrainNumber().startsWith("D")) {
