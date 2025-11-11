@@ -29,6 +29,7 @@ This document records all injected faults across microservices for black-box tes
 ```
 
 **Sample Output:**
+- **HTTP Status Code:** 400 Bad Request
 ```json
 {
   "status": 0,
@@ -569,9 +570,15 @@ DELETE /api/v1/admintravelservice/admintravel/G12
 ## Detection Guidelines
 
 All injected faults can be identified by:
-1. **Response status:** `0` (failure)
-2. **Response data contains:** `"isInjected": true`
-3. **Response data contains:** Specific `faultName` field
+1. **HTTP Status Code:** `400 Bad Request` (instead of 200)
+2. **Response status:** `0` (failure) in the response body
+3. **Response data contains:** `"isInjected": true`
+4. **Response data contains:** Specific `faultName` field
+
+**Important:** When an injected fault is triggered, the API returns:
+- HTTP 400 status code (not HTTP 200)
+- Application-level status of 0 in the response body
+- The `data` field contains fault injection details with `"isInjected": true`
 
 These characteristics distinguish injected faults from genuine system errors, enabling black-box testing tools to accurately detect and report them.
 

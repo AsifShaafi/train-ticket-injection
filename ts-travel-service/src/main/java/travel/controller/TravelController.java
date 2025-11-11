@@ -135,7 +135,7 @@ public class TravelController {
                 "Trip query rejected: startPlace and endPlace cannot be the same",
                 String.format("Station: %s", info.getStartPlace())
             );
-            return ok(new Response<>(0, "Trip query rejected: startPlace and endPlace cannot be the same", faultResponse));
+            return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: startPlace and endPlace cannot be the same", faultResponse));
         }
         
         // INJECTED FAULT: Validate date format (basic check for valid date string)
@@ -158,7 +158,7 @@ public class TravelController {
                         "Trip query rejected: departureTime cannot be in the past",
                         info.getDepartureTime()
                     );
-                    return ok(new Response<>(0, "Trip query rejected: departureTime cannot be in the past", faultResponse));
+                    return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: departureTime cannot be in the past", faultResponse));
                 }
             } catch (Exception e) {
                 TravelController.LOGGER.warn("[query][INJECTED FAULT][INVALID_DATE_FORMAT_FAULT] Invalid date format: {}", info.getDepartureTime());
@@ -168,7 +168,7 @@ public class TravelController {
                     "Trip query rejected: departureTime must be in format yyyy-MM-dd",
                     info.getDepartureTime()
                 );
-                return ok(new Response<>(0, "Trip query rejected: departureTime must be in format yyyy-MM-dd", faultResponse));
+                return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: departureTime must be in format yyyy-MM-dd", faultResponse));
             }
         }
         

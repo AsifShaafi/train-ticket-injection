@@ -51,7 +51,7 @@ public class UserController {
                 "INVALID_USERNAME_FORMAT_FAULT", 
                 "Login rejected: username cannot be null or empty"
             );
-            return ResponseEntity.ok(new Response<>(0, "Login rejected: username cannot be null or empty", faultResponse));
+            return ResponseEntity.badRequest().body(new Response<>(0, "Login rejected: username cannot be null or empty", faultResponse));
         }
         
         if (dao.getUsername().trim().length() < 4 || dao.getUsername().trim().length() > 20) {
@@ -62,7 +62,7 @@ public class UserController {
                 "Login rejected: username length must be between 4 and 20 characters",
                 String.format("Username length: %d", dao.getUsername().trim().length())
             );
-            return ResponseEntity.ok(new Response<>(0, "Login rejected: username length must be between 4 and 20 characters", faultResponse));
+            return ResponseEntity.badRequest().body(new Response<>(0, "Login rejected: username length must be between 4 and 20 characters", faultResponse));
         }
         
         // INJECTED FAULT: Validate password length (must be at least 6 characters)
@@ -74,7 +74,7 @@ public class UserController {
                 "Login rejected: password must be at least 6 characters",
                 dao.getPassword() == null ? "null" : String.format("Password length: %d", dao.getPassword().length())
             );
-            return ResponseEntity.ok(new Response<>(0, "Login rejected: password must be at least 6 characters", faultResponse));
+            return ResponseEntity.badRequest().body(new Response<>(0, "Login rejected: password must be at least 6 characters", faultResponse));
         }
         
         try {

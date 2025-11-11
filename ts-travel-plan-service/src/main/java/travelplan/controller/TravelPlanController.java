@@ -1,10 +1,12 @@
 package travelplan.controller;
 
+import edu.fudan.common.util.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import edu.fudan.common.entity.TripInfo;
 import travelplan.entity.TransferTravelInfo;
@@ -50,7 +52,12 @@ public class TravelPlanController {
     @PostMapping(value="/travelPlan/minStation")
     public HttpEntity getByMinStation(@RequestBody TripInfo queryInfo, @RequestHeader HttpHeaders headers) {
         TravelPlanController.LOGGER.info("[getMinStation][Search Min Station][start: {},end: {},time: {}]",queryInfo.getStartPlace(),queryInfo.getEndPlace(),queryInfo.getDepartureTime());
-        return ok(travelPlanService.getMinStation(queryInfo, headers));
+        Response response = travelPlanService.getMinStation(queryInfo, headers);
+        // Return HTTP 400 for injected faults
+        if (response.getStatus() == 0 && response.getData() != null) {
+            return ResponseEntity.badRequest().body(response);
+        }
+        return ok(response);
     }
 
 }

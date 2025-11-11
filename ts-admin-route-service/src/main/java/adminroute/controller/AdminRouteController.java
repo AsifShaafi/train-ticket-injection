@@ -1,12 +1,14 @@
 package adminroute.controller;
 
 import edu.fudan.common.entity.RouteInfo;
+import edu.fudan.common.util.Response;
 import adminroute.service.AdminRouteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.ResponseEntity.ok;
@@ -39,7 +41,12 @@ public class AdminRouteController {
     public HttpEntity addRoute(@RequestBody RouteInfo request, @RequestHeader HttpHeaders headers) {
         logger.info("[addRoute][Create and modify route][route id: {}, from station {} to station {}]",
                 request.getId(), request.getStartStation(), request.getEndStation());
-        return ok(adminRouteService.createAndModifyRoute(request, headers));
+        Response response = adminRouteService.createAndModifyRoute(request, headers);
+        // Return HTTP 400 for injected faults
+        if (response.getStatus() == 0 && response.getData() != null) {
+            return ResponseEntity.badRequest().body(response);
+        }
+        return ok(response);
     }
 
     @DeleteMapping(value = "/adminroute/{routeId}")

@@ -6,11 +6,13 @@ import edu.fudan.common.entity.Config;
 import edu.fudan.common.entity.Contacts;
 import edu.fudan.common.entity.Station;
 import edu.fudan.common.entity.TrainType;
+import edu.fudan.common.util.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.ResponseEntity.ok;
@@ -168,7 +170,12 @@ public class AdminBasicInfoController {
     @PostMapping(path = "/adminbasic/prices")
     public HttpEntity addPrice(@RequestBody PriceInfo pi, @RequestHeader HttpHeaders headers) {
         AdminBasicInfoController.LOGGER.info("[addPrice][Add Price by admin[PriceInfo id: {}]", pi.getId());
-        return ok(adminBasicInfoService.addPrice(pi, headers));
+        Response response = adminBasicInfoService.addPrice(pi, headers);
+        // Return HTTP 400 for injected faults
+        if (response.getStatus() == 0 && response.getData() != null) {
+            return ResponseEntity.badRequest().body(response);
+        }
+        return ok(response);
     }
 
 }
