@@ -2,8 +2,9 @@ name: Deploy Docker Images
 
 on:
   push:
-    - main
-    - server_ci_cd
+    branches:
+      - main
+      - server_ci_cd
 
 jobs:
   build-and-deploy:
