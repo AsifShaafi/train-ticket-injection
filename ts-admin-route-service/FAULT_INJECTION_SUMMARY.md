@@ -7,10 +7,10 @@
 - **Triggers:** station list is null, empty, or contains less than 2 stations
 - **Test:** Send route with `stationList: "Shanghai"` (only 1 station) or `stationList: ""`
 
-### 2. DUPLICATE_STATIONS_FAULT
+### 2. INVALID_STATION_NAME_LENGTH_FAULT
 - **Endpoint:** `POST /api/v1/adminrouteservice/adminroute`
-- **Triggers:** station list contains duplicate stations (case-insensitive)
-- **Test:** Send route with `stationList: "Shanghai,Beijing,shanghai"`
+- **Triggers:** individual station name length < 2 or > 50 characters
+- **Test:** Send route with station "A" (1 char) or "AAA...AAA" (51+ chars) in the list
 
 ## Files Modified
 - `src/main/java/adminroute/entity/FaultInjectionResponse.java` (NEW)

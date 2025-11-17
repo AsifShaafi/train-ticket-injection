@@ -7,10 +7,10 @@
 - **Triggers:** startPlace or endPlace is null or empty
 - **Test:** Send request with `startPlace: null` or `endPlace: ""`
 
-### 2. SAME_STATION_FAULT
+### 2. INVALID_STATION_LENGTH_FAULT
 - **Endpoint:** `POST /api/v1/travelplanservice/travelPlan/minStation`
-- **Triggers:** startPlace equals endPlace (case-insensitive)
-- **Test:** Send request with `startPlace: "Shanghai"` and `endPlace: "shanghai"`
+- **Triggers:** startPlace or endPlace length < 2 or > 50 characters
+- **Test:** Send request with `startPlace: "A"` (1 char) or `startPlace: "A...A"` (51+ chars)
 
 ## Files Modified
 - `src/main/java/travelplan/entity/FaultInjectionResponse.java` (NEW)

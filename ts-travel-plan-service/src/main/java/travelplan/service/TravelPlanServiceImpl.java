@@ -206,16 +206,27 @@ public class TravelPlanServiceImpl implements TravelPlanService {
             return new Response<>(0, "Travel plan request rejected: endPlace cannot be null or empty", faultResponse);
         }
         
-        // INJECTED FAULT: Validate start and end stations are different
-        if (info.getStartPlace().trim().equalsIgnoreCase(info.getEndPlace().trim())) {
-            TravelPlanServiceImpl.LOGGER.warn("[getMinStation][INJECTED FAULT][SAME_STATION_FAULT] startPlace equals endPlace: {}", info.getStartPlace());
+        // INJECTED FAULT: Validate station name length (must be between 2 and 50 characters)
+        if (info.getStartPlace().trim().length() < 2 || info.getStartPlace().trim().length() > 50) {
+            TravelPlanServiceImpl.LOGGER.warn("[getMinStation][INJECTED FAULT][INVALID_STATION_LENGTH_FAULT] startPlace length invalid: {}", info.getStartPlace().trim().length());
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
-                "SAME_STATION_FAULT", 
-                "Travel plan request rejected: startPlace and endPlace cannot be the same",
-                String.format("Station: %s", info.getStartPlace())
+                "INVALID_STATION_LENGTH_FAULT", 
+                "Travel plan request rejected: startPlace length must be between 2 and 50 characters",
+                String.format("startPlace: '%s', Length: %d", info.getStartPlace().trim(), info.getStartPlace().trim().length())
             );
-            return new Response<>(0, "Travel plan request rejected: startPlace and endPlace cannot be the same", faultResponse);
+            return new Response<>(0, "Travel plan request rejected: startPlace length must be between 2 and 50 characters", faultResponse);
+        }
+        
+        if (info.getEndPlace().trim().length() < 2 || info.getEndPlace().trim().length() > 50) {
+            TravelPlanServiceImpl.LOGGER.warn("[getMinStation][INJECTED FAULT][INVALID_STATION_LENGTH_FAULT] endPlace length invalid: {}", info.getEndPlace().trim().length());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_STATION_LENGTH_FAULT", 
+                "Travel plan request rejected: endPlace length must be between 2 and 50 characters",
+                String.format("endPlace: '%s', Length: %d", info.getEndPlace().trim(), info.getEndPlace().trim().length())
+            );
+            return new Response<>(0, "Travel plan request rejected: endPlace length must be between 2 and 50 characters", faultResponse);
         }
         
         RoutePlanInfo routePlanInfo = new RoutePlanInfo();

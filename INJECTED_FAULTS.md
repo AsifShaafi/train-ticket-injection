@@ -226,20 +226,21 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 
 ---
 
-### 7. SAME_STATION_FAULT (Travel Plan)
+### 7. INVALID_STATION_LENGTH_FAULT (Travel Plan)
 
 **API:** `POST /api/v1/travelplanservice/travelPlan/minStation`
 
-**Description:** Rejects travel plan when start and end stations are the same.
+**Description:** Rejects travel plan when station name length is outside valid range.
 
 **Trigger Conditions:**
-- `startPlace` equals `endPlace` (case-insensitive)
+- `startPlace` length < 2 or > 50 characters after trimming
+- `endPlace` length < 2 or > 50 characters after trimming
 
 **Sample Input:**
 ```json
 {
-  "startPlace": "Shanghai",
-  "endPlace": "shanghai",
+  "startPlace": "A",
+  "endPlace": "Beijing",
   "departureTime": "2025-11-01"
 }
 ```
@@ -248,12 +249,12 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 ```json
 {
   "status": 0,
-  "msg": "Travel plan request rejected: startPlace and endPlace cannot be the same",
+  "msg": "Travel plan request rejected: startPlace length must be between 2 and 50 characters",
   "data": {
     "isInjected": true,
-    "faultName": "SAME_STATION_FAULT",
-    "message": "Travel plan request rejected: startPlace and endPlace cannot be the same",
-    "details": "Station: Shanghai"
+    "faultName": "INVALID_STATION_LENGTH_FAULT",
+    "message": "Travel plan request rejected: startPlace length must be between 2 and 50 characters",
+    "details": "startPlace: 'A', Length: 1"
   }
 }
 ```
@@ -262,20 +263,21 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 
 ## ts-travel-service
 
-### 8. SAME_STATION_FAULT (Trip Query)
+### 8. INVALID_STATION_LENGTH_FAULT (Trip Query)
 
 **API:** `POST /api/v1/travelservice/trips/left`
 
-**Description:** Rejects trip query when start and end stations are the same.
+**Description:** Rejects trip query when station name length is outside valid range.
 
 **Trigger Conditions:**
-- `startPlace` equals `endPlace` (case-insensitive)
+- `startPlace` length < 2 or > 50 characters after trimming
+- `endPlace` length < 2 or > 50 characters after trimming
 
 **Sample Input:**
 ```json
 {
-  "startPlace": "Beijing",
-  "endPlace": "beijing",
+  "startPlace": "B",
+  "endPlace": "Beijing",
   "departureTime": "2025-11-01"
 }
 ```
@@ -284,33 +286,33 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 ```json
 {
   "status": 0,
-  "msg": "Trip query rejected: startPlace and endPlace cannot be the same",
+  "msg": "Trip query rejected: startPlace length must be between 2 and 50 characters",
   "data": {
     "isInjected": true,
-    "faultName": "SAME_STATION_FAULT",
-    "message": "Trip query rejected: startPlace and endPlace cannot be the same",
-    "details": "Station: Beijing"
+    "faultName": "INVALID_STATION_LENGTH_FAULT",
+    "message": "Trip query rejected: startPlace length must be between 2 and 50 characters",
+    "details": "startPlace: 'B', Length: 1"
   }
 }
 ```
 
 ---
 
-### 9. PAST_DATE_FAULT
+### 9. INVALID_YEAR_RANGE_FAULT
 
 **API:** `POST /api/v1/travelservice/trips/left`
 
-**Description:** Rejects trip query when departure date is in the past.
+**Description:** Rejects trip query when departure year is outside valid range (2000-2100).
 
 **Trigger Conditions:**
-- `departureTime` is a date before today
+- `departureTime` year < 2000 or year > 2100
 
 **Sample Input:**
 ```json
 {
   "startPlace": "Shanghai",
   "endPlace": "Beijing",
-  "departureTime": "2020-01-01"
+  "departureTime": "1999-12-31"
 }
 ```
 
@@ -318,12 +320,12 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 ```json
 {
   "status": 0,
-  "msg": "Trip query rejected: departureTime cannot be in the past",
+  "msg": "Trip query rejected: departureTime year must be between 2000 and 2100",
   "data": {
     "isInjected": true,
-    "faultName": "PAST_DATE_FAULT",
-    "message": "Trip query rejected: departureTime cannot be in the past",
-    "details": "2020-01-01"
+    "faultName": "INVALID_YEAR_RANGE_FAULT",
+    "message": "Trip query rejected: departureTime year must be between 2000 and 2100",
+    "details": "Year: 1999"
   }
 }
 ```
@@ -532,14 +534,15 @@ DELETE /api/v1/admintravelservice/admintravel/G12
 
 ---
 
-### 16. DUPLICATE_STATIONS_FAULT
+### 16. INVALID_STATION_NAME_LENGTH_FAULT
 
 **API:** `POST /api/v1/adminrouteservice/adminroute`
 
-**Description:** Rejects route creation when station list contains duplicates.
+**Description:** Rejects route creation when individual station name length is outside valid range.
 
 **Trigger Conditions:**
-- `stationList` contains duplicate stations (case-insensitive)
+- Any station name in `stationList` is null, empty, or contains only whitespace
+- Any station name length < 2 or > 50 characters after trimming
 
 **Sample Input:**
 ```json
@@ -547,7 +550,7 @@ DELETE /api/v1/admintravelservice/admintravel/G12
   "id": "route-123",
   "startStation": "Shanghai",
   "endStation": "Beijing",
-  "stationList": "Shanghai,Beijing,shanghai"
+  "stationList": "Shanghai,X,Beijing"
 }
 ```
 
@@ -555,12 +558,12 @@ DELETE /api/v1/admintravelservice/admintravel/G12
 ```json
 {
   "status": 0,
-  "msg": "Route creation rejected: station list cannot contain duplicate stations",
+  "msg": "Route creation rejected: each station name must be between 2 and 50 characters",
   "data": {
     "isInjected": true,
-    "faultName": "DUPLICATE_STATIONS_FAULT",
-    "message": "Route creation rejected: station list cannot contain duplicate stations",
-    "details": "Total stations: 3, Unique stations: 2"
+    "faultName": "INVALID_STATION_NAME_LENGTH_FAULT",
+    "message": "Route creation rejected: each station name must be between 2 and 50 characters",
+    "details": "Station: 'X', Length: 1"
   }
 }
 ```

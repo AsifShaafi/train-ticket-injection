@@ -126,16 +126,27 @@ public class TravelController {
         TravelController.LOGGER.info("[query][Query TripResponse][Start: {}, End: {}, Date: {}]", 
             info.getStartPlace(), info.getEndPlace(), info.getDepartureTime());
         
-        // INJECTED FAULT: Validate start and end stations are different
-        if (info.getStartPlace().trim().equalsIgnoreCase(info.getEndPlace().trim())) {
-            TravelController.LOGGER.warn("[query][INJECTED FAULT][SAME_STATION_FAULT] startPlace equals endPlace: {}", info.getStartPlace());
+        // INJECTED FAULT: Validate station name length (must be between 2 and 50 characters)
+        if (info.getStartPlace().trim().length() < 2 || info.getStartPlace().trim().length() > 50) {
+            TravelController.LOGGER.warn("[query][INJECTED FAULT][INVALID_STATION_LENGTH_FAULT] startPlace length invalid: {}", info.getStartPlace().trim().length());
             FaultInjectionResponse faultResponse = new FaultInjectionResponse(
                 true, 
-                "SAME_STATION_FAULT", 
-                "Trip query rejected: startPlace and endPlace cannot be the same",
-                String.format("Station: %s", info.getStartPlace())
+                "INVALID_STATION_LENGTH_FAULT", 
+                "Trip query rejected: startPlace length must be between 2 and 50 characters",
+                String.format("startPlace: '%s', Length: %d", info.getStartPlace().trim(), info.getStartPlace().trim().length())
             );
-            return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: startPlace and endPlace cannot be the same", faultResponse));
+            return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: startPlace length must be between 2 and 50 characters", faultResponse));
+        }
+        
+        if (info.getEndPlace().trim().length() < 2 || info.getEndPlace().trim().length() > 50) {
+            TravelController.LOGGER.warn("[query][INJECTED FAULT][INVALID_STATION_LENGTH_FAULT] endPlace length invalid: {}", info.getEndPlace().trim().length());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INVALID_STATION_LENGTH_FAULT", 
+                "Trip query rejected: endPlace length must be between 2 and 50 characters",
+                String.format("endPlace: '%s', Length: %d", info.getEndPlace().trim(), info.getEndPlace().trim().length())
+            );
+            return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: endPlace length must be between 2 and 50 characters", faultResponse));
         }
         
         // INJECTED FAULT: Validate date format (basic check for valid date string)
@@ -145,20 +156,20 @@ public class TravelController {
                 sdf.setLenient(false);
                 Date departureDate = sdf.parse(info.getDepartureTime());
                 
-                // Check if date is in the past (before today)
-                Date today = new Date();
-                SimpleDateFormat sdfCompare = new SimpleDateFormat("yyyy-MM-dd");
-                Date todayDate = sdfCompare.parse(sdfCompare.format(today));
-                
-                if (departureDate.before(todayDate)) {
-                    TravelController.LOGGER.warn("[query][INJECTED FAULT][PAST_DATE_FAULT] departureTime is in the past: {}", info.getDepartureTime());
-                    FaultInjectionResponse faultResponse = new FaultInjectionResponse(
-                        true, 
-                        "PAST_DATE_FAULT", 
-                        "Trip query rejected: departureTime cannot be in the past",
-                        info.getDepartureTime()
-                    );
-                    return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: departureTime cannot be in the past", faultResponse));
+                // Check if year is in valid range (2000-2100)
+                String dateStr = info.getDepartureTime().trim();
+                if (dateStr.length() >= 4) {
+                    int year = Integer.parseInt(dateStr.substring(0, 4));
+                    if (year < 2000 || year > 2100) {
+                        TravelController.LOGGER.warn("[query][INJECTED FAULT][INVALID_YEAR_RANGE_FAULT] departureTime year out of range: {}", year);
+                        FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                            true, 
+                            "INVALID_YEAR_RANGE_FAULT", 
+                            "Trip query rejected: departureTime year must be between 2000 and 2100",
+                            String.format("Year: %d", year)
+                        );
+                        return ResponseEntity.badRequest().body(new Response<>(0, "Trip query rejected: departureTime year must be between 2000 and 2100", faultResponse));
+                    }
                 }
             } catch (Exception e) {
                 TravelController.LOGGER.warn("[query][INJECTED FAULT][INVALID_DATE_FORMAT_FAULT] Invalid date format: {}", info.getDepartureTime());

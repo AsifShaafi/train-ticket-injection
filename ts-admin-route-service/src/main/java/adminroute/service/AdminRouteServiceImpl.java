@@ -77,17 +77,28 @@ public class AdminRouteServiceImpl implements AdminRouteService {
             return new Response<>(0, "Route creation rejected: route must have at least 2 stations", faultResponse);
         }
         
-        // INJECTED FAULT: Validate no duplicate stations in the route
-        long uniqueStations = stations.stream().map(String::toLowerCase).distinct().count();
-        if (uniqueStations < stations.size()) {
-            logger.warn("[createAndModifyRoute][INJECTED FAULT][DUPLICATE_STATIONS_FAULT] station list contains duplicates");
-            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
-                true, 
-                "DUPLICATE_STATIONS_FAULT", 
-                "Route creation rejected: station list cannot contain duplicate stations",
-                String.format("Total stations: %d, Unique stations: %d", stations.size(), uniqueStations)
-            );
-            return new Response<>(0, "Route creation rejected: station list cannot contain duplicate stations", faultResponse);
+        // INJECTED FAULT: Validate individual station name length (each must be between 2 and 50 characters)
+        for (String station : stations) {
+            if (station == null || station.trim().isEmpty()) {
+                logger.warn("[createAndModifyRoute][INJECTED FAULT][INVALID_STATION_NAME_LENGTH_FAULT] station name is null or empty");
+                FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                    true, 
+                    "INVALID_STATION_NAME_LENGTH_FAULT", 
+                    "Route creation rejected: station name cannot be null or empty"
+                );
+                return new Response<>(0, "Route creation rejected: station name cannot be null or empty", faultResponse);
+            }
+            
+            if (station.trim().length() < 2 || station.trim().length() > 50) {
+                logger.warn("[createAndModifyRoute][INJECTED FAULT][INVALID_STATION_NAME_LENGTH_FAULT] station name length invalid: {}", station.trim().length());
+                FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                    true, 
+                    "INVALID_STATION_NAME_LENGTH_FAULT", 
+                    "Route creation rejected: each station name must be between 2 and 50 characters",
+                    String.format("Station: '%s', Length: %d", station.trim(), station.trim().length())
+                );
+                return new Response<>(0, "Route creation rejected: each station name must be between 2 and 50 characters", faultResponse);
+            }
         }
         
         // check stations
