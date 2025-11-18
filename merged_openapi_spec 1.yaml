@@ -6913,10 +6913,8 @@ components:
       properties:
         distanceList:
           type: string
-        distances:
-          type: array
-          items:
-            type: string
+          description: 'Comma-separated list of distances (e.g., "12.5,8.2,15.7")'
+          example: '12.5,8.2,15.7,22.1,5.9'
         endStation:
           type: string
         id:
@@ -6927,10 +6925,8 @@ components:
           type: string
         stationList:
           type: string
-        stations:
-          type: array
-          items:
-            type: string
+          description: 'Comma-separated list of station names (e.g., "Shanghai,Beijing,Nanjing")'
+          example: 'Grand Central Terminal,Penn Station,Union Station,Times Square Station,Broadway Station'
     ts-admin-route-service_View:
       type: object
       properties:
@@ -10041,6 +10037,8 @@ components:
       properties:
         distanceList:
           type: string
+          description: 'Comma-separated list of distances (e.g., "12.5,8.2,15.7")'
+          example: '12.5,8.2,15.7,22.1,5.9'
         endStation:
           type: string
         id:
@@ -10049,6 +10047,8 @@ components:
           type: string
         stationList:
           type: string
+          description: 'Comma-separated list of station names (e.g., "Shanghai,Beijing,Nanjing")'
+          example: 'Shanghai,Hangzhou,Nanjing,Beijing'
     ts-route-service_View:
       type: object
       properties:
@@ -10792,6 +10792,9 @@ components:
       properties:
         departureTime:
           type: string
+          format: date
+          description: 'Date in format yyyy-MM-dd (e.g., 2025-11-01)'
+          example: '2025-11-01'
         endPlace:
           type: string
         startPlace:
@@ -10923,6 +10926,9 @@ components:
       properties:
         departureTime:
           type: string
+          format: date
+          description: 'Date in format yyyy-MM-dd (e.g., 2025-11-01)'
+          example: '2025-11-01'
         endPlace:
           type: string
         startPlace:
@@ -11073,6 +11079,9 @@ components:
       properties:
         departureTime:
           type: string
+          format: date
+          description: 'Date in format yyyy-MM-dd (e.g., 2025-11-01)'
+          example: '2025-11-01'
         endPlace:
           type: string
         startPlace:
