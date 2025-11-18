@@ -18,7 +18,7 @@ swagger:
 logging:
   # 1. Enable logging to a file and specify the path and name.
   file:
-    name: ./logs/ts-admin-order-service.log
+    name: ./logs/ts-admin-route-service.log
   
   # 2. Set log levels for different parts of the application.
   level:
