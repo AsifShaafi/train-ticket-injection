@@ -11,3 +11,18 @@ spring:
 
 swagger:
   controllerPackage: admintravel.controller
+
+
+# =========================================================
+# Standard Spring Boot Logging Configuration
+# =========================================================
+logging:
+  # 1. Enable logging to a file and specify the path and name.
+  file:
+    name: ./logs/ts-admin-travel-service.log
+  
+  # 2. Set log levels for different parts of the application.
+  level:
+    # Set the default log level for all loggers to INFO (default in production)
+    root: DEBUG
+    
