@@ -84,43 +84,9 @@ This document records all injected faults across microservices for black-box tes
 
 ---
 
-### 3. INVALID_ORDER_ID_LENGTH_FAULT
-
-**API:** `DELETE /api/v1/adminorderservice/adminorder/{orderId}/{trainNumber}`
-
-**Description:** Rejects order deletion when `orderId` length is outside the valid range (10-50 characters).
-
-**Trigger Conditions:**
-- `orderId` is null, empty, or contains only whitespace
-- `orderId` length < 10 characters after trimming
-- `orderId` length > 50 characters after trimming
-
-**Sample Input:**
-```
-DELETE /api/v1/adminorderservice/adminorder/short123/G1234
-```
-
-**Sample Output:**
-```json
-{
-  "status": 0,
-  "msg": "Order deletion rejected: orderId length must be between 10 and 50 characters",
-  "data": {
-    "isInjected": true,
-    "faultName": "INVALID_ORDER_ID_LENGTH_FAULT",
-    "message": "Order deletion rejected: orderId length must be between 10 and 50 characters",
-    "details": "OrderID: 'short123', Length: 8"
-  }
-}
-```
-
----
-
----
-
 ## ts-admin-basic-info-service
 
-### 4. INVALID_PRICE_RATE_FAULT
+### 3. INVALID_PRICE_RATE_FAULT
 
 **API:** `POST /api/v1/adminbasicservice/adminbasic/prices`
 
@@ -156,7 +122,7 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 
 ---
 
-### 5. INVALID_ROUTE_ID_FAULT
+### 4. INVALID_ROUTE_ID_FAULT
 
 **API:** `POST /api/v1/adminbasicservice/adminbasic/prices`
 
@@ -192,7 +158,7 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 
 ## ts-travel-plan-service
 
-### 6. INVALID_STATION_NAME_FAULT
+### 5. INVALID_STATION_NAME_FAULT
 
 **API:** `POST /api/v1/travelplanservice/travelPlan/minStation`
 
@@ -226,7 +192,7 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 
 ---
 
-### 7. INVALID_STATION_LENGTH_FAULT (Travel Plan)
+### 6. INVALID_STATION_LENGTH_FAULT (Travel Plan)
 
 **API:** `POST /api/v1/travelplanservice/travelPlan/minStation`
 
@@ -261,183 +227,9 @@ DELETE /api/v1/adminorderservice/adminorder/short123/G1234
 
 ---
 
-## ts-travel-service
-
-### 8. INVALID_STATION_LENGTH_FAULT (Trip Query)
-
-**API:** `POST /api/v1/travelservice/trips/left`
-
-**Description:** Rejects trip query when station name length is outside valid range.
-
-**Trigger Conditions:**
-- `startPlace` length < 2 or > 50 characters after trimming
-- `endPlace` length < 2 or > 50 characters after trimming
-
-**Sample Input:**
-```json
-{
-  "startPlace": "B",
-  "endPlace": "Beijing",
-  "departureTime": "2025-11-01"
-}
-```
-
-**Sample Output:**
-```json
-{
-  "status": 0,
-  "msg": "Trip query rejected: startPlace length must be between 2 and 50 characters",
-  "data": {
-    "isInjected": true,
-    "faultName": "INVALID_STATION_LENGTH_FAULT",
-    "message": "Trip query rejected: startPlace length must be between 2 and 50 characters",
-    "details": "startPlace: 'B', Length: 1"
-  }
-}
-```
-
----
-
-### 9. INVALID_YEAR_RANGE_FAULT
-
-**API:** `POST /api/v1/travelservice/trips/left`
-
-**Description:** Rejects trip query when departure year is outside valid range (2000-2100).
-
-**Trigger Conditions:**
-- `departureTime` year < 2000 or year > 2100
-
-**Sample Input:**
-```json
-{
-  "startPlace": "Shanghai",
-  "endPlace": "Beijing",
-  "departureTime": "1999-12-31"
-}
-```
-
-**Sample Output:**
-```json
-{
-  "status": 0,
-  "msg": "Trip query rejected: departureTime year must be between 2000 and 2100",
-  "data": {
-    "isInjected": true,
-    "faultName": "INVALID_YEAR_RANGE_FAULT",
-    "message": "Trip query rejected: departureTime year must be between 2000 and 2100",
-    "details": "Year: 1999"
-  }
-}
-```
-
----
-
-### 10. INVALID_DATE_FORMAT_FAULT
-
-**API:** `POST /api/v1/travelservice/trips/left`
-
-**Description:** Rejects trip query when date format is invalid.
-
-**Trigger Conditions:**
-- `departureTime` is not in format `yyyy-MM-dd`
-
-**Sample Input:**
-```json
-{
-  "startPlace": "Shanghai",
-  "endPlace": "Beijing",
-  "departureTime": "01/15/2025"
-}
-```
-
-**Sample Output:**
-```json
-{
-  "status": 0,
-  "msg": "Trip query rejected: departureTime must be in format yyyy-MM-dd",
-  "data": {
-    "isInjected": true,
-    "faultName": "INVALID_DATE_FORMAT_FAULT",
-    "message": "Trip query rejected: departureTime must be in format yyyy-MM-dd",
-    "details": "01/15/2025"
-  }
-}
-```
-
----
-
-## ts-auth-service
-
-### 11. INVALID_USERNAME_FORMAT_FAULT
-
-**API:** `POST /api/v1/users/login`
-
-**Description:** Rejects login when username format is invalid.
-
-**Trigger Conditions:**
-- `username` is null, empty, or contains only whitespace
-- `username` length < 4 or > 20 characters after trimming
-
-**Sample Input:**
-```json
-{
-  "username": "abc",
-  "password": "password123"
-}
-```
-
-**Sample Output:**
-```json
-{
-  "status": 0,
-  "msg": "Login rejected: username length must be between 4 and 20 characters",
-  "data": {
-    "isInjected": true,
-    "faultName": "INVALID_USERNAME_FORMAT_FAULT",
-    "message": "Login rejected: username length must be between 4 and 20 characters",
-    "details": "Username length: 3"
-  }
-}
-```
-
----
-
-### 12. INVALID_PASSWORD_LENGTH_FAULT
-
-**API:** `POST /api/v1/users/login`
-
-**Description:** Rejects login when password is too short.
-
-**Trigger Conditions:**
-- `password` is null or length < 6 characters (whitespace is NOT trimmed for passwords)
-
-**Sample Input:**
-```json
-{
-  "username": "user123",
-  "password": "12345"
-}
-```
-
-**Sample Output:**
-```json
-{
-  "status": 0,
-  "msg": "Login rejected: password must be at least 6 characters",
-  "data": {
-    "isInjected": true,
-    "faultName": "INVALID_PASSWORD_LENGTH_FAULT",
-    "message": "Login rejected: password must be at least 6 characters",
-    "details": "Password length: 5"
-  }
-}
-```
-
----
-
 ## ts-admin-travel-service
 
-### 13. INVALID_TRIP_ID_FORMAT_FAULT
+### 7. INVALID_TRIP_ID_FORMAT_FAULT
 
 **API:** `DELETE /api/v1/admintravelservice/admintravel/{tripId}`
 
@@ -466,7 +258,7 @@ DELETE /api/v1/admintravelservice/admintravel/
 
 ---
 
-### 14. INVALID_TRIP_ID_LENGTH_FAULT
+### 8. INVALID_TRIP_ID_LENGTH_FAULT
 
 **API:** `DELETE /api/v1/admintravelservice/admintravel/{tripId}`
 
@@ -498,7 +290,7 @@ DELETE /api/v1/admintravelservice/admintravel/G12
 
 ## ts-admin-route-service
 
-### 15. INSUFFICIENT_STATIONS_FAULT
+### 9. INSUFFICIENT_STATIONS_FAULT
 
 **API:** `POST /api/v1/adminrouteservice/adminroute`
 
@@ -534,7 +326,7 @@ DELETE /api/v1/admintravelservice/admintravel/G12
 
 ---
 
-### 16. INVALID_STATION_NAME_LENGTH_FAULT
+### 10. INVALID_STATION_NAME_LENGTH_FAULT
 
 **API:** `POST /api/v1/adminrouteservice/adminroute`
 
@@ -587,25 +379,20 @@ These characteristics distinguish injected faults from genuine system errors, en
 
 ## Summary
 
-**Total Services Injected:** 7
+**Total Services Injected:** 5
 - ts-admin-order-service
 - ts-admin-basic-info-service
 - ts-travel-plan-service
-- ts-travel-service
-- ts-auth-service
 - ts-admin-travel-service
 - ts-admin-route-service
 
-**Total Fault Types:** 16
+**Total Fault Types:** 10
 
 **Injected APIs:**
 1. POST /api/v1/adminorderservice/adminorder (validates contactsName and seatNumber)
 2. PUT /api/v1/adminorderservice/adminorder (validates contactsName and seatNumber)
-3. DELETE /api/v1/adminorderservice/adminorder/{orderId}/{trainNumber}
-4. POST /api/v1/adminbasicservice/adminbasic/prices
-5. POST /api/v1/travelplanservice/travelPlan/minStation
-6. POST /api/v1/travelservice/trips/left
-7. POST /api/v1/users/login
-8. DELETE /api/v1/admintravelservice/admintravel/{tripId}
-9. POST /api/v1/adminrouteservice/adminroute
+3. POST /api/v1/adminbasicservice/adminbasic/prices
+4. POST /api/v1/travelplanservice/travelPlan/minStation
+5. DELETE /api/v1/admintravelservice/admintravel/{tripId}
+6. POST /api/v1/adminrouteservice/adminroute
 
