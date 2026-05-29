@@ -1,0 +1,14 @@
+[Unit]
+Description=Poll GitHub for train-ticket branch updates every 2 minutes
+
+[Timer]
+# First check shortly after boot, then every 2 minutes after the previous
+# run finishes (OnUnitActiveSec measures from service deactivation, so a long
+# build never overlaps the next tick).
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=15s
+Unit=train-ticket-auto-deploy.service
+
+[Install]
+WantedBy=timers.target

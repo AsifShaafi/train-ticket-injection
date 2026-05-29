@@ -1,0 +1,20 @@
+[Unit]
+Description=Train-ticket auto-deploy (git poll, rebuild images, redeploy to minikube)
+Documentation=file:///etc/train-ticket/auto-deploy.conf
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Must run as the user that owns minikube / kube config / the SSH deploy key.
+User=asifimtiaz_shaafi1
+Environment=HOME=/home/asifimtiaz_shaafi1
+Environment=KUBECONFIG=/home/asifimtiaz_shaafi1/.kube/config
+Environment=MINIKUBE_HOME=/home/asifimtiaz_shaafi1/.minikube
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/opt/apache-maven-3.9.6/bin
+Environment=AD_CONFIG=/etc/train-ticket/auto-deploy.conf
+ExecStart=/usr/local/bin/train-ticket-auto-deploy.sh
+# Image builds can take a long time; never time the deploy out.
+TimeoutStartSec=0
+StandardOutput=journal
+StandardError=journal
