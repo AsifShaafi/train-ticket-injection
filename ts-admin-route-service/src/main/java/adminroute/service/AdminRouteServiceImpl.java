@@ -54,27 +54,19 @@ public class AdminRouteServiceImpl implements AdminRouteService {
     public Response createAndModifyRoute(RouteInfo request, HttpHeaders headers) {
         logger.info("[createAndModifyRoute][Create and modify route][route id: {}]", request.getId());
         
-        // INJECTED FAULT: Validate station list (must have at least 2 stations)
+        // EXPERIMENT MUTANT (silent-acceptance, for the MIST trace-oracle demo).
+        // CORRECT behavior is to REJECT insufficient-station routes with
+        // Response(0)+faultName -> HTTP 400 (as the other validations below still
+        // do). Here we deliberately ACCEPT the invalid route and report success
+        // (status 1, NO faultName) -> HTTP 200, so the bad input is silently
+        // accepted. This turns INSUFFICIENT_STATIONS_FAULT (one of the 10 tracked
+        // faults) into a silent-acceptance bug: a status/fault-name oracle misses
+        // it (looks like success), but the intent-aware trace oracle
+        // (SilentAcceptanceInvariant) catches it. Revert to restore correctness.
         List<String> stations = request.getStations();
-        if (stations == null || stations.isEmpty()) {
-            logger.warn("[createAndModifyRoute][INJECTED FAULT][INSUFFICIENT_STATIONS_FAULT] station list is null or empty");
-            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
-                true, 
-                "INSUFFICIENT_STATIONS_FAULT", 
-                "Route creation rejected: station list cannot be null or empty"
-            );
-            return new Response<>(0, "Route creation rejected: station list cannot be null or empty", faultResponse);
-        }
-        
-        if (stations.size() < 2) {
-            logger.warn("[createAndModifyRoute][INJECTED FAULT][INSUFFICIENT_STATIONS_FAULT] station list has less than 2 stations: {}", stations.size());
-            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
-                true, 
-                "INSUFFICIENT_STATIONS_FAULT", 
-                "Route creation rejected: route must have at least 2 stations",
-                String.format("Number of stations: %d", stations.size())
-            );
-            return new Response<>(0, "Route creation rejected: route must have at least 2 stations", faultResponse);
+        if (stations == null || stations.size() < 2) {
+            logger.warn("[createAndModifyRoute][SILENT_ACCEPTANCE MUTANT] insufficient stations accepted as success (should have been rejected as INSUFFICIENT_STATIONS_FAULT)");
+            return new Response(1, "Save and Modify success", null);
         }
         
         // INJECTED FAULT: Validate individual station name length (each must be between 2 and 50 characters)
