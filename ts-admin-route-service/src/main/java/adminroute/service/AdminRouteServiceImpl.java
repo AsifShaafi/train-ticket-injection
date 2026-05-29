@@ -54,19 +54,27 @@ public class AdminRouteServiceImpl implements AdminRouteService {
     public Response createAndModifyRoute(RouteInfo request, HttpHeaders headers) {
         logger.info("[createAndModifyRoute][Create and modify route][route id: {}]", request.getId());
         
-        // EXPERIMENT MUTANT (silent-acceptance, for the MIST trace-oracle demo).
-        // CORRECT behavior is to REJECT insufficient-station routes with
-        // Response(0)+faultName -> HTTP 400 (as the other validations below still
-        // do). Here we deliberately ACCEPT the invalid route and report success
-        // (status 1, NO faultName) -> HTTP 200, so the bad input is silently
-        // accepted. This turns INSUFFICIENT_STATIONS_FAULT (one of the 10 tracked
-        // faults) into a silent-acceptance bug: a status/fault-name oracle misses
-        // it (looks like success), but the intent-aware trace oracle
-        // (SilentAcceptanceInvariant) catches it. Revert to restore correctness.
+        // INJECTED FAULT: Validate station list (must have at least 2 stations)
         List<String> stations = request.getStations();
-        if (stations == null || stations.size() < 2) {
-            logger.warn("[createAndModifyRoute][SILENT_ACCEPTANCE MUTANT] insufficient stations accepted as success (should have been rejected as INSUFFICIENT_STATIONS_FAULT)");
-            return new Response(1, "Save and Modify success", null);
+        if (stations == null || stations.isEmpty()) {
+            logger.warn("[createAndModifyRoute][INJECTED FAULT][INSUFFICIENT_STATIONS_FAULT] station list is null or empty");
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INSUFFICIENT_STATIONS_FAULT", 
+                "Route creation rejected: station list cannot be null or empty"
+            );
+            return new Response<>(0, "Route creation rejected: station list cannot be null or empty", faultResponse);
+        }
+        
+        if (stations.size() < 2) {
+            logger.warn("[createAndModifyRoute][INJECTED FAULT][INSUFFICIENT_STATIONS_FAULT] station list has less than 2 stations: {}", stations.size());
+            FaultInjectionResponse faultResponse = new FaultInjectionResponse(
+                true, 
+                "INSUFFICIENT_STATIONS_FAULT", 
+                "Route creation rejected: route must have at least 2 stations",
+                String.format("Number of stations: %d", stations.size())
+            );
+            return new Response<>(0, "Route creation rejected: route must have at least 2 stations", faultResponse);
         }
         
         // INJECTED FAULT: Validate individual station name length (each must be between 2 and 50 characters)
@@ -108,16 +116,31 @@ public class AdminRouteServiceImpl implements AdminRouteService {
 
         HttpEntity requestEntity = new HttpEntity(request, null);
         String route_service_url = getServiceUrl("ts-route-service");
-        ResponseEntity<Response<Route>> re = restTemplate.exchange(
-                route_service_url + "/api/v1/routeservice/routes",
-                HttpMethod.POST,
-                requestEntity,
-                new ParameterizedTypeReference<Response<Route>>() {
-                });
-        if (re.getStatusCode() != HttpStatus.ACCEPTED) {
-            logger.error("[createAndModifyRoute][receive response][Get status error][response code: {}]", re.getStatusCodeValue());
+        // HIDDEN-DOWNSTREAM MUTANT (for the MIST distributed-trace-oracle demo).
+        // CORRECT behavior is to let a downstream ts-route-service HTTP 5xx
+        // propagate (un-mutated, restTemplate throws and the caller gets 500).
+        // Here we deliberately SWALLOW the downstream server error and report
+        // success -> the caller sees a clean HTTP 200 while the ts-route-service
+        // span 5xx-errored in the trace. A status / soft-error / response-body
+        // oracle cannot see this (the response is a valid success); only the
+        // distributed-trace oracle (HiddenDownstreamFailureInvariant) catches it.
+        // This is a realistic swallowed-exception bug. Revert to restore
+        // correct error propagation.
+        try {
+            ResponseEntity<Response<Route>> re = restTemplate.exchange(
+                    route_service_url + "/api/v1/routeservice/routes",
+                    HttpMethod.POST,
+                    requestEntity,
+                    new ParameterizedTypeReference<Response<Route>>() {
+                    });
+            if (re.getStatusCode() != HttpStatus.ACCEPTED) {
+                logger.error("[createAndModifyRoute][receive response][Get status error][response code: {}]", re.getStatusCodeValue());
+            }
+            return re.getBody();
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            logger.warn("[createAndModifyRoute][HIDDEN_DOWNSTREAM MUTANT] downstream ts-route-service returned {} -- swallowed, reporting success", e.getStatusCode());
+            return new Response(1, "Save and Modify success", null);
         }
-        return re.getBody();
     }
 
     @Override
