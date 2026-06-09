@@ -116,31 +116,16 @@ public class AdminRouteServiceImpl implements AdminRouteService {
 
         HttpEntity requestEntity = new HttpEntity(request, null);
         String route_service_url = getServiceUrl("ts-route-service");
-        // HIDDEN-DOWNSTREAM MUTANT (for the MIST distributed-trace-oracle demo).
-        // CORRECT behavior is to let a downstream ts-route-service HTTP 5xx
-        // propagate (un-mutated, restTemplate throws and the caller gets 500).
-        // Here we deliberately SWALLOW the downstream server error and report
-        // success -> the caller sees a clean HTTP 200 while the ts-route-service
-        // span 5xx-errored in the trace. A status / soft-error / response-body
-        // oracle cannot see this (the response is a valid success); only the
-        // distributed-trace oracle (HiddenDownstreamFailureInvariant) catches it.
-        // This is a realistic swallowed-exception bug. Revert to restore
-        // correct error propagation.
-        try {
-            ResponseEntity<Response<Route>> re = restTemplate.exchange(
-                    route_service_url + "/api/v1/routeservice/routes",
-                    HttpMethod.POST,
-                    requestEntity,
-                    new ParameterizedTypeReference<Response<Route>>() {
-                    });
-            if (re.getStatusCode() != HttpStatus.ACCEPTED) {
-                logger.error("[createAndModifyRoute][receive response][Get status error][response code: {}]", re.getStatusCodeValue());
-            }
-            return re.getBody();
-        } catch (org.springframework.web.client.HttpServerErrorException e) {
-            logger.warn("[createAndModifyRoute][HIDDEN_DOWNSTREAM MUTANT] downstream ts-route-service returned {} -- swallowed, reporting success", e.getStatusCode());
-            return new Response(1, "Save and Modify success", null);
+        ResponseEntity<Response<Route>> re = restTemplate.exchange(
+                route_service_url + "/api/v1/routeservice/routes",
+                HttpMethod.POST,
+                requestEntity,
+                new ParameterizedTypeReference<Response<Route>>() {
+                });
+        if (re.getStatusCode() != HttpStatus.ACCEPTED) {
+            logger.error("[createAndModifyRoute][receive response][Get status error][response code: {}]", re.getStatusCodeValue());
         }
+        return re.getBody();
     }
 
     @Override
