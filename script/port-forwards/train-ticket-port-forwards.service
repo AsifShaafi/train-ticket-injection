@@ -1,0 +1,30 @@
+[Unit]
+Description=Train-ticket kubectl port-forwards (jaeger, nacos, gateway, ui)
+Documentation=file:///etc/train-ticket/port-forwards.conf
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# kubectl needs to find a kubeconfig. Adjust if you run as a non-root user.
+Environment=KUBECONFIG=/home/asifimtiaz_shaafi1/.kube/config
+Environment=PF_CONFIG=/etc/train-ticket/port-forwards.conf
+Environment=PF_ADDRESS=129.62.148.112
+Environment=PF_RESTART_DELAY=3
+ExecStart=/usr/local/bin/train-ticket-port-forwards.sh
+Restart=always
+RestartSec=5
+# Give child kubectl processes a chance to shut down cleanly.
+KillMode=mixed
+TimeoutStopSec=15
+# Hardening (kubectl only needs network + kubeconfig)
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
