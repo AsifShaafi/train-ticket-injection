@@ -6345,7 +6345,15 @@ spec:
             - name: METRICS_STORAGE_TYPE
               value: prometheus
             - name: SPAN_STORAGE_TYPE
-              value: memory
+              value: badger          # was: memory
+            - name: BADGER_EPHEMERAL
+              value: "false"
+            - name: BADGER_DIRECTORY_VALUE
+              value: /badger/data
+            - name: BADGER_DIRECTORY_KEY
+              value: /badger/key
+            - name: BADGER_SPAN_STORE_TTL
+              value: 720h
             - name: COLLECTOR_ZIPKIN_HOST_PORT
               value: :9411
             - name: JAEGER_DISABLED
@@ -6356,8 +6364,8 @@ spec:
           imagePullPolicy: IfNotPresent
           name: jaeger
           args:
-            - "--memory.max-traces"
-            - "8000"
+            # - "--memory.max-traces"
+            # - "8000"
             - "--query.base-path"
             - "/jaeger/ui"
             - "--prometheus.server-url"
