@@ -6313,6 +6313,15 @@ spec:
         - name: storage
           emptyDir: {}
 ---
+# Replacement for the `jaeger` Deployment in
+# deployment/kubernetes-manifests/otel/otel.yml
+#
+# Replace the entire existing `jaeger` Deployment document with the block
+# below, then append the PVC document at the end of the file.
+#
+# Nothing else in otel.yml changes. Grafana, otelcol, and Prometheus are
+# untouched.
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6340,18 +6349,47 @@ spec:
         prometheus.io/port: "14269"
         prometheus.io/scrape: "true"
     spec:
+      serviceAccountName: jaeger
+      # The all-in-one image runs as root on this deployment (verified
+      # 2026-08-05: `kubectl exec deploy/jaeger -- id` returns uid=0).
+      # fsGroup and the init container below are therefore belt-and-braces:
+      # they cost nothing and keep the manifest correct if the image ever
+      # switches to the non-root user upstream uses (UID 10001).
+      securityContext:
+        fsGroup: 10001
+      initContainers:
+        - name: badger-dir-permissions
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - mkdir -p /badger/data /badger/key && chown -R 10001:10001 /badger
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: badger-storage
+              mountPath: /badger
       containers:
-        - env:
+        - name: jaeger
+          image: jaegertracing/all-in-one:1.45.0
+          imagePullPolicy: IfNotPresent
+          env:
             - name: METRICS_STORAGE_TYPE
               value: prometheus
+            # Badger replaces in-memory storage. In-memory held 97.5 minutes
+            # of traces at the observed background rate (81.8 traces/min,
+            # measured 2026-08-05) and lost everything on pod restart.
             - name: SPAN_STORAGE_TYPE
-              value: badger          # was: memory
+              value: badger
             - name: BADGER_EPHEMERAL
               value: "false"
             - name: BADGER_DIRECTORY_VALUE
               value: /badger/data
             - name: BADGER_DIRECTORY_KEY
               value: /badger/key
+            # 720h = 30 days. The Jaeger default is 72h, which would delete
+            # corpus traces after three days with no warning.
             - name: BADGER_SPAN_STORE_TTL
               value: 720h
             - name: COLLECTOR_ZIPKIN_HOST_PORT
@@ -6360,12 +6398,12 @@ spec:
               value: "false"
             - name: COLLECTOR_OTLP_ENABLED
               value: "true"
-          image: jaegertracing/all-in-one:1.45.0
-          imagePullPolicy: IfNotPresent
-          name: jaeger
+          # NOTE: --memory.max-traces has been removed, not commented out.
+          # That flag is registered only when SPAN_STORAGE_TYPE=memory. Under
+          # badger the binary exits at startup with
+          # "Error: unknown flag: --memory.max-traces" and crash-loops.
+          # Do not restore it without also reverting SPAN_STORAGE_TYPE.
           args:
-            # - "--memory.max-traces"
-            # - "8000"
             - "--query.base-path"
             - "/jaeger/ui"
             - "--prometheus.server-url"
@@ -6413,8 +6451,15 @@ spec:
             limits:
               memory: 2Gi
           volumeMounts:
-      serviceAccountName: jaeger
+            - name: badger-storage
+              mountPath: /badger
       volumes:
+        - name: badger-storage
+          persistentVolumeClaim:
+            claimName: jaeger-badger-pvc
+
+# deploy.sh must apply storage/ BEFORE otel/, or the Jaeger pod stays Pending
+# waiting on an unbound claim.
 ---
 apiVersion: apps/v1
 kind: Deployment

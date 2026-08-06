@@ -1,0 +1,48 @@
+# deployment/kubernetes-manifests/storage/jaeger-badger-pvc.yaml
+#
+# WHY THIS IS NOT IN otel/otel.yml
+#
+# reset.sh runs `kubectl delete -f deployment/kubernetes-manifests/otel`,
+# which deletes every manifest in that directory. If this PVC lived there,
+# every reset would destroy all collected traces — and the `standard`
+# storage class on this minikube has RECLAIMPOLICY=Delete, so the data goes
+# with the claim and cannot be recovered.
+#
+# Keeping it in its own directory means deletion requires a deliberate act:
+#   ./reset.sh <namespace> --delete-trace-data
+#
+# deploy.sh must apply this directory BEFORE otel/, since the Jaeger
+# Deployment mounts this claim and will stay Pending without it:
+#   kubectl apply -f deployment/kubernetes-manifests/storage -n $namespace
+#
+# STORAGE CLASS CONSTRAINTS (minikube, verified 2026-08-05)
+#   RECLAIMPOLICY:          Delete  — deleting the PVC deletes the data
+#   ALLOWVOLUMEEXPANSION:   false   — 20Gi cannot be grown later
+#
+# After first bind, flip the underlying PV to Retain so an accidental PVC
+# delete does not take the data with it:
+#   PV=$(kubectl get pvc jaeger-badger-pvc -o jsonpath='{.spec.volumeName}')
+#   kubectl patch pv "$PV" -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
+#
+# Badger is Jaeger's durable local store. It replaced in-memory storage,
+# which held 97.5 minutes of traces at the observed background rate
+# (81.8 traces/min, measured 2026-08-05) and lost everything on restart.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jaeger-badger-pvc
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: all-in-one
+  annotations:
+    seclogtrace.baylor.edu/purpose: >-
+      Research trace corpus. Deleting this claim destroys collected data.
+      Export to data/raw/ before any teardown.
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard
